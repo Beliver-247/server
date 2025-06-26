@@ -4,6 +4,17 @@ const ChocolateLog = require("../models/ChocolateLog");
 
 router.post("/", async (req, res) => {
   try {
+    // Get current total for the member
+    const memberLogs = await ChocolateLog.find({ member: req.body.member });
+    const currentTotal = memberLogs.reduce((sum, log) => sum + log.quantity, 0);
+    
+    // Check if adding new quantity would exceed limit
+    if (currentTotal + req.body.quantity > 12) {
+      return res.status(400).json({ 
+        error: `Member has reached or would exceed chocolate limit of 12 (current: ${currentTotal})`
+      });
+    }
+
     const newLog = new ChocolateLog(req.body);
     await newLog.save();
     res.status(201).json(newLog);
